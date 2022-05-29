@@ -1,5 +1,8 @@
 const express = require("express");
+const { validate, userValidation } = require("../middlewares/validation");
+
 const router = express.Router();
+
 const { createUser, deleteUser } = require("../controllers/userController");
 // const { userMiddleware } = require("../middlewares/userMiddlewares");
 
@@ -13,7 +16,7 @@ const userMiddleware = (req, res, next) => {
   next();
 };
 
-router.post("/create", userMiddleware, createUser);
+router.post("/create", userValidation, validate, createUser);
 
 router.get("/about", deleteUser);
 
