@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const nodemailer = require("nodemailer");
 const EmailVerificationToken = require("../models/emailVerificationToken");
 const { isValidObjectId } = require("mongoose");
+const { generateMailTransform, generateOTP } = require("../utils/mail");
 
 exports.createUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -16,11 +17,7 @@ exports.createUser = async (req, res) => {
 
   await newUser.save();
 
-  let otp = "";
-  for (let i = 0; i <= 5; i++) {
-    let randomNum = Math.round(Math.random() * 9);
-    otp += randomNum;
-  }
+  let otp = generateOTP();
 
   const newEmailVerificationToken = new EmailVerificationToken({
     owner: newUser._id,
@@ -29,16 +26,7 @@ exports.createUser = async (req, res) => {
 
   await newEmailVerificationToken.save();
 
-  var transport = nodemailer.createTransport({
-    host: "smtp.mailtrap.io",
-    port: 2525,
-    auth: {
-      user: "522369c640e00b",
-      pass: "35d59cb3d582ed",
-    },
-  });
-
-  const info = await transport.sendMail({
+  const info = await generateMailTransform().sendMail({
     from: "verification@movieflix.com",
     to: newUser.email,
     subject: "Email verification",
@@ -75,16 +63,7 @@ exports.verifyEmail = async (req, res) => {
 
   await EmailVerificationToken.findByIdAndDelete(token._id);
 
-  var transport = nodemailer.createTransport({
-    host: "smtp.mailtrap.io",
-    port: 2525,
-    auth: {
-      user: "522369c640e00b",
-      pass: "35d59cb3d582ed",
-    },
-  });
-
-  const info = await transport.sendMail({
+  const info = await generateMailTransform().sendMail({
     from: "verification@movieflix.com",
     to: user.email,
     subject: "Welcome Email",
@@ -109,11 +88,7 @@ exports.resendEmailVerificationToken = async (req, res) => {
       msg: "After one hour you can request for another token.",
     });
 
-  let otp = "";
-  for (let i = 0; i <= 5; i++) {
-    let randomNum = Math.round(Math.random() * 9);
-    otp += randomNum;
-  }
+  let otp = generateOTP();
 
   const newEmailVerificationToken = new EmailVerificationToken({
     owner: user._id,
@@ -122,16 +97,7 @@ exports.resendEmailVerificationToken = async (req, res) => {
 
   await newEmailVerificationToken.save();
 
-  var transport = nodemailer.createTransport({
-    host: "smtp.mailtrap.io",
-    port: 2525,
-    auth: {
-      user: "522369c640e00b",
-      pass: "35d59cb3d582ed",
-    },
-  });
-
-  const info = await transport.sendMail({
+  const info = await generateMailTransform().sendMail({
     from: "verification@movieflix.com",
     to: user.email,
     subject: "Email verification",
