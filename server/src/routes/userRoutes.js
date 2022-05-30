@@ -3,7 +3,11 @@ const { validate, userValidation } = require("../middlewares/validation");
 
 const router = express.Router();
 
-const { createUser, deleteUser } = require("../controllers/userController");
+const {
+  createUser,
+  verifyEmail,
+  deleteUser,
+} = require("../controllers/userController");
 // const { userMiddleware } = require("../middlewares/userMiddlewares");
 
 const userMiddleware = (req, res, next) => {
@@ -17,6 +21,7 @@ const userMiddleware = (req, res, next) => {
 };
 
 router.post("/create", userValidation, validate, createUser);
+router.post("/verify-email", verifyEmail);
 
 router.get("/about", deleteUser);
 
