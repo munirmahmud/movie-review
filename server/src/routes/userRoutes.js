@@ -6,7 +6,7 @@ const router = express.Router();
 const {
   createUser,
   verifyEmail,
-  deleteUser,
+  resendEmailVerificationToken,
 } = require("../controllers/userController");
 // const { userMiddleware } = require("../middlewares/userMiddlewares");
 
@@ -22,7 +22,6 @@ const userMiddleware = (req, res, next) => {
 
 router.post("/create", userValidation, validate, createUser);
 router.post("/verify-email", verifyEmail);
-
-router.get("/about", deleteUser);
+router.post("/resend-email-verification-token", resendEmailVerificationToken);
 
 module.exports = router;
