@@ -1,8 +1,13 @@
 const User = require("../models/userModel");
-const nodemailer = require("nodemailer");
 const EmailVerificationToken = require("../models/emailVerificationToken");
+const PasswordResetToken = require("../models/passwordResetToken");
 const { isValidObjectId } = require("mongoose");
-const { generateMailTransform, generateOTP } = require("../utils/mail");
+const {
+  generateMailTransform,
+  generateOTP,
+  getErrorMessage,
+} = require("../utils/mail");
+const { generateRandomByte } = require("../utils/helpers");
 
 exports.createUser = async (req, res) => {
   const { name, email, password } = req.body;
@@ -108,4 +113,48 @@ exports.resendEmailVerificationToken = async (req, res) => {
   });
 
   res.json({ msg: "Another new OTP has been sent to your email" });
+};
+
+exports.resetPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return getErrorMessage(res, "Email is required");
+  }
+
+  const userExist = await User.findOne({ email });
+  if (!userExist) {
+    return getErrorMessage(res, "No user found", 404);
+  }
+
+  const isOtpAvailable = await PasswordResetToken.findOne({
+    user: userExist._id,
+  });
+  if (isOtpAvailable) {
+    return getErrorMessage(
+      res,
+      "After one hour you may request for another OTP."
+    );
+  }
+
+  const token = await generateRandomByte();
+  const newPasswordResetToken = await PasswordResetToken({
+    user: userExist._id,
+    otp: token,
+  });
+  await newPasswordResetToken.save();
+
+  const tempURL = `http://localhost:3000/reset-password?token=${token}&id=${userExist._id}`;
+  // Send confirmation mail with the OTP
+  const info = await generateMailTransform().sendMail({
+    from: "security@movieflix.com",
+    to: userExist.email,
+    subject: "Reset Password Link",
+    html: `
+      <p>Click here to reset password</p>
+      <a href="${tempURL}" target="_blank">Reset Password</a>
+    `,
+  });
+
+  getErrorMessage(res, "A link was sent to your email.");
 };
