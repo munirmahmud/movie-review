@@ -115,7 +115,7 @@ exports.resendEmailVerificationToken = async (req, res) => {
   res.json({ msg: "Another new OTP has been sent to your email" });
 };
 
-exports.resetPassword = async (req, res) => {
+exports.forgetPassword = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
@@ -146,7 +146,7 @@ exports.resetPassword = async (req, res) => {
 
   const tempURL = `http://localhost:3000/reset-password?token=${token}&id=${userExist._id}`;
   // Send confirmation mail with the OTP
-  const info = await generateMailTransform().sendMail({
+  await generateMailTransform().sendMail({
     from: "security@movieflix.com",
     to: userExist.email,
     subject: "Reset Password Link",
@@ -157,4 +157,37 @@ exports.resetPassword = async (req, res) => {
   });
 
   getErrorMessage(res, "A link was sent to your email.");
+};
+
+exports.forgetResetPasswordTokenStatus = (req, res) => {
+  res.json({ valid: true });
+};
+exports.resetPassword = async (req, res) => {
+  const { password, userId } = req.body;
+
+  const user = await User.findById(userId);
+
+  const isMatched = await user.comparePassword(password);
+  if (!isMatched) {
+    return getErrorMessage(
+      res,
+      "The new password must be different from old one."
+    );
+  }
+
+  user.password = password;
+  await user.save();
+
+  await PasswordResetToken.findByIdAndDelete(req.resetToken._id);
+
+  await generateMailTransform().sendMail({
+    from: "security@movieflix.com",
+    to: userExist.email,
+    subject: "Password Reset Message",
+    html: `
+      <p>Your password has been reset successfully.</p>
+    `,
+  });
+
+  getErrorMessage(res, "Your password has been reset successfully.", 200);
 };

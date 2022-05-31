@@ -16,6 +16,16 @@ exports.userValidation = [
     .withMessage("Password must be between 5-20 characters."),
 ];
 
+exports.validatePassword = [
+  check("password")
+    .trim()
+    .not()
+    .isEmpty()
+    .withMessage("Password is required")
+    .isLength({ min: 5, max: 20 })
+    .withMessage("Password must be between 5-20 characters."),
+];
+
 exports.validate = (req, res, next) => {
   const error = validationResult(req).array();
 
