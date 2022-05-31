@@ -7,7 +7,7 @@ const passwordResetTokenSchema = mongoose.Schema({
     ref: "User",
     required: true,
   },
-  otp: {
+  token: {
     type: String,
     required: true,
   },
@@ -17,15 +17,17 @@ const passwordResetTokenSchema = mongoose.Schema({
     default: Date.now(),
   },
 });
+
 passwordResetTokenSchema.pre("save", async function (next) {
-  if (this.isModified("otp")) {
-    this.otp = await bcrypt.hash(this.otp, 10);
+  if (this.isModified("token")) {
+    this.token = await bcrypt.hash(this.token, 10);
   }
 
   next();
 });
-passwordResetTokenSchema.methods.compareToken = async function (otp) {
-  return await bcrypt.compare(otp, this.otp);
+
+passwordResetTokenSchema.methods.compareToken = async function (token) {
+  return await bcrypt.compare(token, this.token);
 };
 
 module.exports = mongoose.model("PasswordResetToken", passwordResetTokenSchema);

@@ -140,7 +140,7 @@ exports.resetPassword = async (req, res) => {
   const token = await generateRandomByte();
   const newPasswordResetToken = await PasswordResetToken({
     user: userExist._id,
-    otp: token,
+    token,
   });
   await newPasswordResetToken.save();
 
