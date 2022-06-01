@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const EmailVerificationToken = require("../models/emailVerificationToken");
 const PasswordResetToken = require("../models/passwordResetToken");
 const { isValidObjectId } = require("mongoose");
+const jwt = require("jsonwebtoken");
 const {
   generateMailTransform,
   generateOTP,
@@ -159,9 +160,10 @@ exports.forgetPassword = async (req, res) => {
   getErrorMessage(res, "A link was sent to your email.");
 };
 
-exports.forgetResetPasswordTokenStatus = (req, res) => {
+exports.sendResetPasswordTokenStatus = (req, res) => {
   res.json({ valid: true });
 };
+
 exports.resetPassword = async (req, res) => {
   const { password, userId } = req.body;
 
@@ -190,4 +192,22 @@ exports.resetPassword = async (req, res) => {
   });
 
   getErrorMessage(res, "Your password has been reset successfully.", 200);
+};
+
+exports.signinController = async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return getErrorMessage(res, "Email/Password does not match");
+  }
+
+  const isMatched = await user.comparePassword(password);
+  if (!isMatched) {
+    return getErrorMessage(res, "Email/Password does not match");
+  }
+
+  const { _id, name, email: userEmail } = user;
+  const jwtToken = jwt.signin({ userId: _id }, process.env.JWT_SECRET);
+  res.json({ user: { id: _id, name, email: userEmail, token: jwtToken } });
 };
