@@ -12,9 +12,9 @@ const nodemailer = require("nodemailer");
 exports.generateMailTransform = () =>
   nodemailer.createTransport({
     host: "smtp.mailtrap.io",
-    port: 2525,
+    port: process.env.MAIL_TRAP_PORT,
     auth: {
-      user: "522369c640e00b",
-      pass: "35d59cb3d582ed",
+      user: process.env.MAIL_TRAP_USER,
+      pass: process.env.MAIL_TRAP_PASS,
     },
   });

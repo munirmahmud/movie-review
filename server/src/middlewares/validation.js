@@ -16,6 +16,15 @@ exports.userValidation = [
     .withMessage("Password must be between 5-20 characters."),
 ];
 
+exports.signInValidation = [
+  check("email")
+    .trim()
+    .normalizeEmail()
+    .isEmail()
+    .withMessage("Email is required"),
+  check("password").trim().not().isEmpty().withMessage("Password is required"),
+];
+
 exports.validatePassword = [
   check("password")
     .trim()
